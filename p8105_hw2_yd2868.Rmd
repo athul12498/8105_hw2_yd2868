@@ -6,7 +6,7 @@ date: "2025-09-30"
 
 Load needed packs and data.
 ```{r}
-
+library(readxl)
 library(tidyverse)
 ```
 
@@ -104,4 +104,47 @@ join_df =
 
 The pols dataset contains monthly political data, the snp dataset provides monthly S&P 500 closing values, and the unemployment dataset records monthly unemployment rates. All three datasets include year and month variables, which allow them to be merged into a single dataset that combines political, economic, and employment information for each month and year.
 
-#pblem2
+#problem2
+import and clean data
+```{r}
+MR_trashW_df = 
+  read_excel("./202509 Trash Wheel Collection Data.xlsx", 
+             sheet = "Mr. Trash Wheel",
+             range = "A2:N709",
+             na = c(".","NA",""))|>
+  janitor::clean_names()|>
+  select(-c(homes_powered))|>
+  mutate(
+    sports_balls = as.integer(round(sports_balls))
+  )
+
+Pro_trashW_df = 
+  read_excel("./202509 Trash Wheel Collection Data.xlsx", 
+             sheet = "Professor Trash Wheel",
+             range = "A2:M134",
+             na = c(".","NA",""))|>
+  janitor::clean_names()|>
+  select(-c(homes_powered))
+  
+
+Gwy_trashW_df = 
+  read_excel("./202509 Trash Wheel Collection Data.xlsx", 
+             sheet = "Gwynns Falls Trash Wheel",
+             range = "A2:L351",
+             na = c(".","NA",""))|>
+  janitor::clean_names()|>
+  select(-c(homes_powered))
+```
+
+join all three dataset
+```{r}
+Gwy_trashW_df = mutate(Gwy_trashW_df,Wheel = "Gwynns",
+       year = as.double(year))
+Pro_trashW_df = mutate(Pro_trashW_df,Wheel = "Professor",
+       year = as.double(year))
+MR_trashW_df = mutate(MR_trashW_df,Wheel = "MR",
+       year = as.double(year))
+trashW_df = bind_rows(MR_trashW_df,Pro_trashW_df,Gwy_trashW_df)
+```
+
+There is a total of `r nrow(trashW_df)` observations for these three wheels. It contains weight, volume for each dumpsters and number of certain kind of trash such as plastic bottles, polystyrene, cigarette butts, glass bottles, plastic bags, wrappers, sports_balls. For example, the total weight of trash collected by Professor Trash Wheel is `r sum(select(filter(trashW_df, Wheel == "Professor"), weight_tons))` tons, and the total number of cigarette butts collected by Gwynnda in June of 2022 is`r  format(sum(select(filter(trashW_df, Wheel == "Gwynns", month == "June", year == "2022"), cigarette_butts)))`.
